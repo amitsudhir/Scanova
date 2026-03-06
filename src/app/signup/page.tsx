@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
+import { GoogleOneTap } from "@/components/GoogleOneTap";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -113,6 +114,8 @@ export default function SignupPage() {
   // ---- Normal Signup Form ----
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-[#050508] text-white">
+      {/* Google One-Tap */}
+      <GoogleOneTap />
       {/* Animated Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080801a_1px,transparent_1px),linear-gradient(to_bottom,#8080801a_1px,transparent_1px)] bg-[size:48px_48px] z-0 opacity-40" />
