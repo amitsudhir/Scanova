@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  devIndicators: {
-    appIsrStatus: false, // Disables the static/dynamic indicator badge
-    buildActivity: false,
-    buildActivityPosition: 'bottom-right',
+  // Ensures static assets and images are served from the right path
+  images: {
+    unoptimized: true,
   },
 };
 
 export default nextConfig;
+

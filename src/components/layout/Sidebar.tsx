@@ -30,7 +30,7 @@ export function Sidebar({ items }: { items: NavItem[] }) {
       
       <div className="flex-1 py-6 px-4 flex flex-col gap-1">
         {items.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
@@ -53,7 +53,10 @@ export function Sidebar({ items }: { items: NavItem[] }) {
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground hover:text-foreground gap-3 px-3 rounded-xl"
-          onClick={() => signOut(auth)}
+          onClick={async () => {
+            await signOut(auth);
+            window.location.href = "/";
+          }}
         >
           <LogOut className="w-5 h-5" />
           Sign out
