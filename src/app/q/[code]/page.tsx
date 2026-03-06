@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, increment, doc } from "firebase/firestore";
 import { qrCodesRef, qrScansRef } from "@/lib/db";
+import { db } from "@/lib/firebase";
 import { QrCode } from "lucide-react";
 
 export default function QRRedirectEngine() {
@@ -33,46 +34,47 @@ export default function QRRedirectEngine() {
           return;
         }
 
-        // 1. Record Analytics
-        // In a real prod environment this would be done on a secure backend Route endpoint,
-        // using headers to get real IP and User-Agent.
-        try {
-          await addDoc(qrScansRef, {
-            qr_id: qr.id,
-            timestamp: serverTimestamp(),
-            device: /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
-            browser: "Chrome", // Simplified for MVP
-            os: "Windows", // Simplified for MVP
-            country: "Unknown", // Needs external API
-          });
-        } catch (e) {
-          console.error("Failed to log scan", e);
-        }
-
-        // 2. Check Expiry
+        // Check Expiry First
         if (qr.expiry_date && qr.expiry_date.toDate() < new Date()) {
           router.replace("/expired");
           return;
         }
 
-        // 3. Check Password
+        // Check Password
         if (qr.password) {
-          // Pass the QR ID in URL or use session state. 
-          // For MVP, router push to protected route with the shortcode
           router.replace(`/protected/${code}`);
           return;
         }
 
-        // 4. Final Redirect based on Type
+        // 1. Record Real Analytics (Tracking true scans)
+        try {
+          // A real prod environment uses ip detection. We use basic UA for MVP.
+          await addDoc(qrScansRef, {
+            qr_id: qr.id,
+            user_id: qr.user_id, // For global dashboard aggregation
+            timestamp: serverTimestamp(),
+            device: /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+            browser: navigator.userAgent.includes("Chrome") ? "Chrome" : navigator.userAgent.includes("Safari") ? "Safari" : navigator.userAgent.includes("Firefox") ? "Firefox" : "Other",
+            os: navigator.userAgent.includes("Win") ? "Windows" : navigator.userAgent.includes("Mac") ? "MacOS" : navigator.userAgent.includes("Linux") ? "Linux" : "Other",
+            country: "Unknown", 
+          });
+          
+          // Atomically increment the total scan count on the main document
+          await updateDoc(doc(db, "qr_codes", qr.id), {
+             scan_count: increment(1)
+          });
+        } catch (e) {
+          console.error("Failed to log scan", e);
+        }
+
+        // 2. Headless Instant Redirect
         if (qr.type === "multi") {
           router.replace(`/smart/${code}`);
+        } else if (qr.destination_url) {
+          // Hard replace the window location for true redirect speed
+          window.location.replace(qr.destination_url);
         } else {
-          // Prevent open redirect vulnerabilites basic check
-          if (qr.destination_url.startsWith("http")) {
-             window.location.href = qr.destination_url;
-          } else {
-             setError("Invalid destination URL detected.");
-          }
+          setError("Invalid destination URL detected.");
         }
 
       } catch (err) {
@@ -96,16 +98,6 @@ export default function QRRedirectEngine() {
     );
   }
 
-  // Loading state while evaluating rules
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="relative">
-        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-        <div className="absolute inset-0 flex items-center justify-center">
-           <QrCode className="w-6 h-6 text-primary animate-pulse" />
-        </div>
-      </div>
-      <p className="mt-6 text-muted-foreground animate-pulse">Routing intelligently...</p>
-    </div>
-  );
+  // Purely headless, minimal empty layout so it visually jumps instantly
+  return <div className="min-h-screen bg-transparent" />;
 }

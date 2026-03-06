@@ -50,7 +50,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.h1 
-              className="text-6xl md:text-8xl lg:text-[100px] font-extrabold tracking-tighter mb-8 leading-[1.05]"
+              className="text-6xl md:text-8xl lg:text-[100px] font-extrabold tracking-tighter mb-8 leading-[1.05] text-balance max-w-5xl"
               initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
@@ -62,7 +62,7 @@ export default function LandingPage() {
             </motion.h1>
             
             <motion.p 
-              className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl leading-relaxed mx-auto font-medium"
+              className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl leading-relaxed mx-auto font-medium text-balance"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
@@ -101,11 +101,11 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row gap-16 items-center">
               <div className="flex-1 space-y-6">
-                <h2 className="text-4xl md:text-6xl font-bold tracking-tight">
+                <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-balance">
                   Never reprint <br className="hidden md:block" />
                   <span className="text-primary text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">another code.</span>
                 </h2>
-                <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
+                <p className="text-xl text-muted-foreground leading-relaxed max-w-xl text-balance">
                   With <strong>Dynamic QR Codes</strong>, the underlying short-link never changes. You can route users to a menu today, and a signup form tomorrow. Update the destination infinitely without changing the printed graphic.
                 </p>
                 <ul className="space-y-4 pt-4">
@@ -153,8 +153,8 @@ export default function LandingPage() {
         <section id="features" className="py-32 bg-[#050508] relative">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">The ultimate toolkit.</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-balance">The ultimate toolkit.</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
                 Everything you need to build intelligent digital experiences from physical touchpoints.
               </p>
             </div>
@@ -217,9 +217,9 @@ export default function LandingPage() {
            {/* Abstract mesh gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/10 opacity-30" />
           
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tighter">Ready to upgrade?</h2>
-            <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto font-medium">
+          <div className="container mx-auto px-4 text-center relative z-10 flex flex-col items-center">
+            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tighter text-balance max-w-4xl">Ready to upgrade?</h2>
+            <p className="text-xl text-muted-foreground mb-12 max-w-xl mx-auto font-medium text-balance leading-relaxed">
               Join the future of offline-to-online marketing. Build dynamic touchpoints today.
             </p>
             <Link href="/signup">

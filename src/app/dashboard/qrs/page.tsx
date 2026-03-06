@@ -6,15 +6,41 @@ import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { qrCodesRef } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { QrCode, ExternalLink, Activity, Clock, Lock, LayoutTemplate } from "lucide-react";
+import { QrCode, ExternalLink, Activity, Clock, Lock, LayoutTemplate, Trash2, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { QRDisplay } from "@/components/QRDisplay";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { deleteDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toast } from "sonner";
 
 export default function MyQRsPage() {
   const { user } = useAuth();
   const [qrs, setQrs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [qrToDelete, setQrToDelete] = useState<any>(null);
+
+  const handleDelete = async () => {
+    if (!qrToDelete) return;
+    try {
+      await deleteDoc(doc(db, "qr_codes", qrToDelete.id));
+      setQrs(qrs.filter(q => q.id !== qrToDelete.id));
+      toast.success("QR Code deleted successfully");
+    } catch (error) {
+      console.error("Error deleting QR code", error);
+      toast.error("Failed to delete QR code");
+    } finally {
+      setQrToDelete(null);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -23,11 +49,16 @@ export default function MyQRsPage() {
       try {
         const q = query(
           qrCodesRef, 
-          where("user_id", "==", user.uid),
-          orderBy("created_at", "desc")
+          where("user_id", "==", user.uid)
         );
         const snapshots = await getDocs(q);
         const fetchedQrs = snapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort in memory to avoid needing a Firestore composite index
+        fetchedQrs.sort((a: any, b: any) => {
+          const dateA = a.created_at?.toDate?.()?.getTime() || 0;
+          const dateB = b.created_at?.toDate?.()?.getTime() || 0;
+          return dateB - dateA;
+        });
         setQrs(fetchedQrs);
       } catch (error) {
         console.error("Failed to fetch QRs", error);
@@ -109,20 +140,66 @@ export default function MyQRsPage() {
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="pt-0 flex justify-between">
+              <CardFooter className="pt-0 flex justify-between items-center">
                  <div className="flex items-center gap-2 text-primary font-medium text-sm">
                    <Activity className="w-4 h-4" />
-                   {/* Mock scan count */}
-                   <span>1.2k scans</span>
+                   <span>{qr.scan_count || 0} scans</span>
                  </div>
-                 <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    Manage
-                 </Button>
+                 <div className="flex gap-2">
+                   <Button 
+                     variant="ghost" 
+                     size="icon" 
+                     title="Copy Link"
+                     className="opacity-0 group-hover:opacity-100 transition-opacity h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted"
+                     onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(typeof window !== 'undefined' ? `${window.location.origin}/q/${qr.short_code}` : `https://scanova.com/q/${qr.short_code}`);
+                        toast.success("Link copied to clipboard");
+                     }}
+                   >
+                     <Copy className="w-4 h-4" />
+                   </Button>
+                   <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
+                      <Link href={`/dashboard/edit/${qr.id}`}>Manage</Link>
+                   </Button>
+                   <Button 
+                     variant="ghost" 
+                     size="icon" 
+                     className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10 h-9 w-9"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setQrToDelete(qr);
+                     }}
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </Button>
+                 </div>
               </CardFooter>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Custom Deletion Popup Dialog */}
+      <Dialog open={!!qrToDelete} onOpenChange={(open) => !open && setQrToDelete(null)}>
+        <DialogContent className="sm:max-w-md bg-card border-border/50">
+          <DialogHeader>
+            <DialogTitle>Delete QR Code</DialogTitle>
+            <DialogDescription>
+              Are you absolutely sure you want to delete &quot;{qrToDelete?.title}&quot;? 
+              This will instantly break all printed versions of this QR code. Anyone analyzing it will see a 404 error. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end gap-2 mt-4">
+            <Button type="button" variant="outline" onClick={() => setQrToDelete(null)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDelete}>
+              Yes, Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Scanova | AI-Powered Dynamic QR Platform",
   description: "Transform static QR codes into intelligent digital gateways with analytics, smart landing pages, and AI campaigns.",
+  icons: {
+    icon: "/Scanova_logo.jpg",
+  },
 };
 
 export default function RootLayout({
