@@ -6,7 +6,8 @@ import { query, where, getDocs } from "firebase/firestore";
 import { qrCodesRef, qrLinksRef } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { QrCode, Link as LinkIcon } from "lucide-react";
+import { QrCode, Link as LinkIcon, Share2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function SmartLandingPage() {
   const params = useParams();
@@ -64,49 +65,95 @@ export default function SmartLandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center py-16 px-4">
-      {/* Dynamic Background */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/20 to-transparent -z-10" />
-
-      <div className="w-full max-w-sm space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-500">
+    <div className="min-h-screen flex flex-col items-center py-16 px-4 relative overflow-hidden text-foreground"
+         style={{ backgroundColor: qr.bg_color || "#0B0B0F" }}>
+      
+      {/* Immersive Blur Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div 
+          className="absolute top-[-10%] right-[-10%] w-[70vw] h-[70vw] rounded-full blur-[120px] opacity-20"
+          style={{ backgroundColor: qr.fg_color || "#6366F1" }}
+        />
+        <div 
+          className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-10"
+          style={{ backgroundColor: qr.fg_color || "#6366F1" }}
+        />
+      </div>
+      
+      <div className="w-full max-w-sm space-y-8 z-10">
         
         {/* Profile / Header */}
-        <div className="text-center space-y-4">
-           <div className="w-24 h-24 rounded-full bg-card border-4 border-background mx-auto shadow-xl flex items-center justify-center overflow-hidden">
-             {/* Stub profile image */}
-             <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                 <QrCode className="w-10 h-10 text-white" />
-             </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-4"
+        >
+           <div className="w-24 h-24 rounded-3xl mx-auto shadow-2xl flex items-center justify-center overflow-hidden border border-white/10 p-0.5"
+                style={{ backgroundColor: qr.fg_color || "#FFFFFF" }}>
+              <div className="w-full h-full rounded-[1.4rem] bg-background flex items-center justify-center overflow-hidden">
+                {qr.logo_data_url ? (
+                  <img src={qr.logo_data_url} alt="logo" className="w-full h-full object-contain p-2" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${qr.fg_color}44, ${qr.fg_color}22)` }}>
+                    <QrCode className="w-10 h-10" style={{ color: qr.fg_color }} />
+                  </div>
+                )}
+              </div>
            </div>
-           <h1 className="text-2xl font-bold tracking-tight">{qr.title}</h1>
-           <p className="text-muted-foreground text-sm">Powered by Scanova</p>
-        </div>
+           <div>
+             <h1 className="text-2xl font-bold tracking-tight">{qr.title}</h1>
+             <p className="text-muted-foreground text-sm opacity-70">Digital gateway by Scanova</p>
+           </div>
+        </motion.div>
 
         {/* Links List */}
-        <div className="space-y-4">
-          {links.map((link) => (
-            <a 
+        <div className="space-y-3">
+          {links.map((link, i) => (
+            <motion.a 
               key={link.id} 
               href={link.url.startsWith("http") ? link.url : `https://${link.url}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="block hover:scale-[1.02] active:scale-[0.98] transition-all"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="block group"
             >
-              <Card className="bg-card/60 backdrop-blur-md border border-border/50 hover:border-primary/50 shadow-sm hover:shadow-primary/20 transition-all overflow-hidden group">
-                <CardContent className="p-0 flex items-center h-16">
+              <div className="relative overflow-hidden rounded-2xl p-px transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-black/20">
+                {/* Animated gradient border on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 opacity-50" />
+                
+                <div className="relative bg-card/40 backdrop-blur-xl rounded-[calc(1rem-1px)] flex items-center h-16 border border-white/5 transition-colors group-hover:bg-card/60">
                   {/* Icon Area */}
-                  <div className="w-16 h-full flex items-center justify-center bg-background/50 group-hover:bg-primary/10 transition-colors">
-                    <LinkIcon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <div className="w-16 h-full flex items-center justify-center border-r border-white/5 bg-white/5 group-hover:bg-white/10 transition-colors">
+                    <LinkIcon className="w-5 h-5 transition-transform group-hover:rotate-12" style={{ color: qr.fg_color }} />
                   </div>
                   {/* Text Area */}
-                  <div className="flex-1 px-4 font-semibold shrink-0 truncate">
+                  <div className="flex-1 px-5 font-bold truncate">
                     {link.title}
                   </div>
-                </CardContent>
-              </Card>
-            </a>
+                  <div className="pr-5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Share2 className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </div>
+            </motion.a>
           ))}
         </div>
+
+        {/* Footer */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="pt-12 text-center"
+        >
+          <Link href="/">
+            <Button variant="ghost" className="text-xs text-muted-foreground hover:text-foreground gap-2 rounded-full px-6">
+              <QrCode className="w-3.5 h-3.5" /> Made with Scanova
+            </Button>
+          </Link>
+        </motion.div>
       </div>
     </div>
   );

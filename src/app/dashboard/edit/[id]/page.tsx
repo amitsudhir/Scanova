@@ -14,8 +14,14 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { QrCode, Link as LinkIcon, Lock, Clock, Navigation, Plus, Trash2, LayoutTemplate } from "lucide-react";
-import { QRDisplay } from "@/components/QRDisplay";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
+
+const QRDesigner = dynamic(() => import("@/components/QRDesigner").then(mod => mod.QRDesigner), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-muted/20 animate-pulse rounded-xl" />
+});
+import type { QRDesign } from "@/components/QRDesigner";
 
 export default function EditQRPage() {
   const { user } = useAuth();
@@ -40,6 +46,14 @@ export default function EditQRPage() {
   const [expiryDate, setExpiryDate] = useState("");
   const [contextRules, setContextRules] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  
+  // QR Design
+  const [design, setDesign] = useState<QRDesign>({
+    fgColor: "#0B0B0F",
+    bgColor: "#FFFFFF",
+    dotType: "square",
+    cornerType: "square",
+  });
 
   useEffect(() => {
     if (!user || !id) return;
@@ -70,6 +84,15 @@ export default function EditQRPage() {
           const localISOTime = (new Date(d.getTime() - tzoffset)).toISOString().slice(0,16);
           setExpiryDate(localISOTime);
         }
+
+        // Setup Design
+        setDesign({
+          fgColor: data.fg_color || "#0B0B0F",
+          bgColor: data.bg_color || "#FFFFFF",
+          dotType: data.dot_type || "square",
+          cornerType: data.corner_type || "square",
+          logoDataUrl: data.logo_data_url || undefined,
+        });
 
         if (data.type === "multi") {
           const linksQ = query(qrLinksRef, where("qr_id", "==", id));
@@ -108,7 +131,12 @@ export default function EditQRPage() {
         destination_url: type === "single" ? destination : null,
         password: password || null,
         expiry_date: expiryDate ? new Date(expiryDate) : null,
-        is_active: isActive
+        is_active: isActive,
+        fg_color: design.fgColor,
+        bg_color: design.bgColor,
+        dot_type: design.dotType,
+        corner_type: design.cornerType,
+        logo_data_url: design.logoDataUrl || null,
       };
 
       await updateDoc(docRef, updateData);
@@ -291,15 +319,14 @@ export default function EditQRPage() {
                 <CardTitle className="text-lg">Preview Action</CardTitle>
                 <CardDescription>Shortcode: <span className="text-primary font-mono bg-primary/10 px-1 rounded">{shortCode}</span></CardDescription>
               </CardHeader>
-              <CardContent className="flex justify-center py-6">
-                <div className="relative group">
-                  <QRDisplay 
-                    value={typeof window !== 'undefined' ? `${window.location.origin}/q/${shortCode}` : `https://scanova.com/q/${shortCode}`} 
-                    title={title || "Preview"} 
-                    showDownload={true} 
-                    size={160} 
-                  />
-                </div>
+              <CardContent className="space-y-4 pb-2">
+                <QRDesigner 
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/q/${shortCode}` : `https://scanova.com/q/${shortCode}`}
+                  title={title || "Preview"}
+                  design={design}
+                  onDesignChange={setDesign}
+                  size={200}
+                />
               </CardContent>
               <CardFooter>
                  <Button type="submit" size="lg" className="w-full text-md h-12" disabled={loading}>
