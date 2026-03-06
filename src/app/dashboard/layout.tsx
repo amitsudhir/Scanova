@@ -4,9 +4,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { QrCode, LayoutDashboard, BarChart3, Settings, Sparkles, LogOut } from "lucide-react";
+import { QrCode, LayoutDashboard, BarChart3, Settings, Sparkles, Shield } from "lucide-react";
 
-const sidebarNavItems = [
+const baseNavItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "My QRs", href: "/dashboard/qrs", icon: QrCode },
   { title: "Create QR", href: "/dashboard/create", icon: QrCode },
@@ -15,15 +15,12 @@ const sidebarNavItems = [
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { user, loading } = useAuth();
+const adminNavItem = { title: "Admin Panel", href: "/dashboard/admin", icon: Shield };
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
 
-  // Protect route
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
@@ -38,10 +35,12 @@ export default function DashboardLayout({
     );
   }
 
+  const navItems = isAdmin ? [...baseNavItems, adminNavItem] : baseNavItems;
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <Sidebar items={sidebarNavItems} />
-      <main className="flex-1 p-8 overflow-y-auto">
+      <Sidebar items={navItems} />
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto pt-20 md:pt-8">
         {children}
       </main>
     </div>

@@ -12,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { QrCode, Link as LinkIcon, Lock, Clock, Navigation, Plus, Trash2, LayoutTemplate } from "lucide-react";
+import { QrCode, Link as LinkIcon, Lock, Clock, Navigation, Plus, Trash2, LayoutTemplate, Crown } from "lucide-react";
 import { QRDisplay } from "@/components/QRDisplay";
+import { ProGate } from "@/components/ProGate";
 
 export default function CreateQRPage() {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -32,6 +33,10 @@ export default function CreateQRPage() {
   const [password, setPassword] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [contextRules, setContextRules] = useState(false);
+
+  // QR Design
+  const [fgColor, setFgColor] = useState("#0B0B0F");
+  const [bgColor, setBgColor] = useState("#FFFFFF");
 
   // Generate shortcode
   const generateShortCode = () => {
@@ -56,6 +61,9 @@ export default function CreateQRPage() {
         password: password || null,
         expiry_date: expiryDate ? new Date(expiryDate) : null,
         is_active: true,
+        fg_color: fgColor,
+        bg_color: bgColor,
+        scan_count: 0,
         created_at: serverTimestamp()
       };
 
@@ -119,7 +127,10 @@ export default function CreateQRPage() {
                   <Tabs value={type} onValueChange={(v) => setType(v as "single" | "multi")} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-background/50">
                       <TabsTrigger value="single" className="gap-2"><LinkIcon className="w-4 h-4"/> Direct Redirect</TabsTrigger>
-                      <TabsTrigger value="multi" className="gap-2"><LayoutTemplate className="w-4 h-4"/> Smart Landing Page</TabsTrigger>
+                      <TabsTrigger value="multi" className="gap-2" disabled={!isPro}>
+                        <LayoutTemplate className="w-4 h-4"/> Smart Landing Page
+                        {!isPro && <Crown className="w-3 h-3 text-yellow-400 ml-1" />}
+                      </TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="single" className="pt-4 space-y-2">
@@ -170,36 +181,39 @@ export default function CreateQRPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Lock className="w-4 h-4 text-orange-500" /> Security & Expiration</CardTitle>
-                <CardDescription>Optional protections for your links.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Password Protection</Label>
-                  <Input 
-                    type="password"
-                    placeholder="Leave blank for public access" 
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="bg-background/50 w-full sm:w-1/2"
-                  />
-                  <p className="text-xs text-muted-foreground">Users must enter this to reach destination.</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Expiration Date & Time</Label>
-                  <Input 
-                    type="datetime-local" 
-                    value={expiryDate}
-                    onChange={e => setExpiryDate(e.target.value)}
-                    className="bg-background/50 w-full sm:w-1/2"
-                  />
-                  <p className="text-xs text-muted-foreground">Link will fail to resolve after this time.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <ProGate feature="Password & Expiry Protection" className="rounded-xl">
+              <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Lock className="w-4 h-4 text-orange-500" /> Security &amp; Expiration</CardTitle>
+                  <CardDescription>Optional protections for your links.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label>Password Protection</Label>
+                    <Input 
+                      type="password"
+                      placeholder="Leave blank for public access" 
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      disabled={!isPro}
+                      className="bg-background/50 w-full sm:w-1/2"
+                    />
+                    <p className="text-xs text-muted-foreground">Users must enter this to reach destination.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Expiration Date &amp; Time</Label>
+                    <Input 
+                      type="datetime-local" 
+                      value={expiryDate}
+                      onChange={e => setExpiryDate(e.target.value)}
+                      disabled={!isPro}
+                      className="bg-background/50 w-full sm:w-1/2"
+                    />
+                    <p className="text-xs text-muted-foreground">Link will fail to resolve after this time.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </ProGate>
           </div>
 
           {/* Sidebar Config & Submit */}
@@ -209,16 +223,32 @@ export default function CreateQRPage() {
                 <CardTitle className="text-lg">Preview Action</CardTitle>
                 <CardDescription>Your QR code is generated instantly upon saving.</CardDescription>
               </CardHeader>
-              <CardContent className="flex justify-center py-6">
-                <div className="relative group">
+              <CardContent className="space-y-4 pb-2">
+                <div className="flex justify-center py-2">
                   <QRDisplay 
                     value={typeof window !== 'undefined' ? `${window.location.origin}/q/preview` : `https://scanova.com/q/preview`} 
                     title={title || "Preview"} 
                     showDownload={false} 
-                    size={160} 
+                    size={150}
+                    fgColor={fgColor}
+                    bgColor={bgColor}
                   />
-                  <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl pointer-events-none">
-                    <span className="text-primary font-bold drop-shadow-md">Live Preview</span>
+                </div>
+                {/* Color Pickers */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">QR Color</label>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
+                      <input type="color" value={fgColor} onChange={e => setFgColor(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+                      <span className="text-xs font-mono text-muted-foreground">{fgColor}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Background</label>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
+                      <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+                      <span className="text-xs font-mono text-muted-foreground">{bgColor}</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>

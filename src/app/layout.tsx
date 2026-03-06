@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
         <AuthProvider>
           {children}
-          <Toaster theme="dark" position="bottom-right" />
+          <Toaster theme="dark" position="top-center" richColors closeButton />
         </AuthProvider>
       </body>
     </html>

@@ -116,7 +116,9 @@ export default function MyQRsPage() {
                        value={typeof window !== 'undefined' ? `${window.location.origin}/q/${qr.short_code}` : `https://scanova.com/q/${qr.short_code}`} 
                        title={qr.title} 
                        showDownload={true} 
-                       size={80} 
+                       size={80}
+                       fgColor={qr.fg_color || "#0B0B0F"}
+                       bgColor={qr.bg_color || "#FFFFFF"}
                      />
                   </div>
                 </div>
