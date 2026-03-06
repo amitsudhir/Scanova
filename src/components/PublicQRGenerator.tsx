@@ -3,10 +3,15 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { QRDisplay } from "./QRDisplay";
 import { QrCode, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const QRPreview = dynamic(() => import("./QRDesigner").then(mod => mod.QRPreview), { 
+  ssr: false,
+  loading: () => <div className="w-[160px] h-[160px] bg-muted/20 animate-pulse rounded-2xl" />
+});
 
 export function PublicQRGenerator() {
   const [url, setUrl] = useState("");
@@ -71,7 +76,16 @@ export function PublicQRGenerator() {
                   transition={{ type: "spring", bounce: 0.4 }}
                   className="bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md"
                 >
-                  <QRDisplay value={generatedUrl} title="scanova-instant" size={160} />
+                  <QRPreview 
+                    value={generatedUrl} 
+                    size={160}
+                    design={{
+                      fgColor: "#6366F1", // Primary theme color
+                      bgColor: "#FFFFFF",
+                      dotType: "rounded",
+                      cornerType: "extra-rounded"
+                    }}
+                  />
                 </motion.div>
              ) : (
                 <motion.div

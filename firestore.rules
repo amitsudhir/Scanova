@@ -11,9 +11,19 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Users — only the account owner can read/write/delete their own doc
+    function isAdmin() {
+      return isAuthenticated() && request.auth.uid == "aeEAR1PUFihxoBM3oKHjpI5Oeco1";
+    }
+
+    // Users — owner-only access, but Admin can read/update all
     match /users/{userId} {
-      allow read, write, delete: if isOwner(userId);
+      allow read, write: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId);
+    }
+    
+    // Explicitly allow listing the collection if admin
+    match /users {
+      allow list: if isAdmin();
     }
 
     // QR Codes — publicly readable (needed for scanning), owner-only writes/deletes

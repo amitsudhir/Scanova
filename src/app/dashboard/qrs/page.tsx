@@ -10,6 +10,12 @@ import { QrCode, ExternalLink, Activity, Clock, Lock, LayoutTemplate, Trash2, Co
 import Link from "next/link";
 import { format } from "date-fns";
 import { QRDisplay } from "@/components/QRDisplay";
+import dynamic from "next/dynamic";
+
+const QRPreview = dynamic(() => import("@/components/QRDesigner").then(mod => mod.QRPreview), { 
+  ssr: false,
+  loading: () => <div className="w-20 h-20 bg-muted/20 animate-pulse rounded-lg" />
+});
 import {
   Dialog,
   DialogContent,
@@ -112,13 +118,16 @@ export default function MyQRsPage() {
                     </CardDescription>
                   </div>
                   <div className="shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
-                     <QRDisplay 
+                     <QRPreview 
                        value={typeof window !== 'undefined' ? `${window.location.origin}/q/${qr.short_code}` : `https://scanova.com/q/${qr.short_code}`} 
-                       title={qr.title} 
-                       showDownload={true} 
                        size={80}
-                       fgColor={qr.fg_color || "#0B0B0F"}
-                       bgColor={qr.bg_color || "#FFFFFF"}
+                       design={{
+                         fgColor: qr.fg_color || "#000000",
+                         bgColor: qr.bg_color || "#FFFFFF",
+                         dotType: qr.dot_type || "square",
+                         cornerType: qr.corner_type || "square",
+                         logoDataUrl: qr.logo_data_url || undefined
+                       }}
                      />
                   </div>
                 </div>

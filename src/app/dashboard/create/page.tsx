@@ -15,6 +15,14 @@ import { toast } from "sonner";
 import { QrCode, Link as LinkIcon, Lock, Clock, Navigation, Plus, Trash2, LayoutTemplate, Crown } from "lucide-react";
 import { QRDisplay } from "@/components/QRDisplay";
 import { ProGate } from "@/components/ProGate";
+import dynamic from "next/dynamic";
+
+const QRDesigner = dynamic(() => import("@/components/QRDesigner").then(mod => mod.QRDesigner), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-muted/20 animate-pulse rounded-xl" />
+});
+// Note: QRDesign type still imported normally as it's just a type
+import type { QRDesign } from "@/components/QRDesigner";
 
 export default function CreateQRPage() {
   const { user, isPro } = useAuth();
@@ -35,8 +43,12 @@ export default function CreateQRPage() {
   const [contextRules, setContextRules] = useState(false);
 
   // QR Design
-  const [fgColor, setFgColor] = useState("#0B0B0F");
-  const [bgColor, setBgColor] = useState("#FFFFFF");
+  const [design, setDesign] = useState<QRDesign>({
+    fgColor: "#0B0B0F",
+    bgColor: "#FFFFFF",
+    dotType: "square",
+    cornerType: "square",
+  });
 
   // Generate shortcode
   const generateShortCode = () => {
@@ -61,8 +73,11 @@ export default function CreateQRPage() {
         password: password || null,
         expiry_date: expiryDate ? new Date(expiryDate) : null,
         is_active: true,
-        fg_color: fgColor,
-        bg_color: bgColor,
+        fg_color: design.fgColor,
+        bg_color: design.bgColor,
+        dot_type: design.dotType,
+        corner_type: design.cornerType,
+        logo_data_url: design.logoDataUrl || null,
         scan_count: 0,
         created_at: serverTimestamp()
       };
@@ -224,33 +239,13 @@ export default function CreateQRPage() {
                 <CardDescription>Your QR code is generated instantly upon saving.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 pb-2">
-                <div className="flex justify-center py-2">
-                  <QRDisplay 
-                    value={typeof window !== 'undefined' ? `${window.location.origin}/q/preview` : `https://scanova.com/q/preview`} 
-                    title={title || "Preview"} 
-                    showDownload={false} 
-                    size={150}
-                    fgColor={fgColor}
-                    bgColor={bgColor}
-                  />
-                </div>
-                {/* Color Pickers */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">QR Color</label>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
-                      <input type="color" value={fgColor} onChange={e => setFgColor(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
-                      <span className="text-xs font-mono text-muted-foreground">{fgColor}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Background</label>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
-                      <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
-                      <span className="text-xs font-mono text-muted-foreground">{bgColor}</span>
-                    </div>
-                  </div>
-                </div>
+                <QRDesigner 
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/q/preview` : `https://scanova.com/q/preview`}
+                  title={title || "Preview"}
+                  design={design}
+                  onDesignChange={setDesign}
+                  size={200}
+                />
               </CardContent>
               <CardFooter>
                  <Button type="submit" size="lg" className="w-full text-md h-12" disabled={loading}>

@@ -45,8 +45,9 @@ export default function AdminPage() {
         data.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
         setUsers(data);
         setFiltered(data);
-      } catch (err) {
-        toast.error("Failed to load users.");
+      } catch (err: any) {
+        console.error("Error fetching users:", err);
+        toast.error(`Failed to load users: ${err.message || "Unknown error"}`);
       } finally {
         setLoadingUsers(false);
       }
